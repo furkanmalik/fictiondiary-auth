@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Header Example</title>
+</head>
+<body>
+  <!-- Header/Profile Section -->
+  <div class="header-profile" id="profile-section" style="position:absolute;top:20px;right:20px;display:none;color:#000;">
+    <span id="user-email"></span>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const SUPABASE_URL = 'https://arjppadarehcmvbppxcc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyanBwYWRhcmVoY212YnBweGNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4NTExMjEsImV4cCI6MjA2MzQyNzEyMX0.c-12tW84Eee_pPMZCszbBKgft0kLEAhLGKSxRlilu0U';
+
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function logout() {
+      sb.auth.signOut().then(() => {
+        localStorage.removeItem('user_email');
+        location.reload();
+      });
+    }
+
+    function displayPersistentProfile() {
+      const email = localStorage.getItem('user_email');
+      if (email) {
+        const section = document.getElementById('profile-section');
+        if (section) {
+          section.style.display = 'block';
+          document.getElementById('user-email').textContent = email;
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', displayPersistentProfile);
+  </script>
+</body>
+</html>
