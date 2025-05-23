@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,11 +65,17 @@
       top: 20px;
       right: 20px;
       color: #000;
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div class="auth-wrapper">
+  <div class="header-profile" id="profile-section">
+    <span id="user-email"></span>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <div class="auth-wrapper" id="auth-wrapper">
     <div class="tab-buttons">
       <button id="login-tab" class="active" onclick="switchTab('login')">Login</button>
       <button id="signup-tab" onclick="switchTab('signup')">Signup</button>
@@ -92,11 +97,6 @@
     </div>
   </div>
 
-  <div class="header-profile" id="profile-section" style="display:none">
-    <span id="user-email"></span>
-    <button onclick="logout()">Logout</button>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
     const SUPABASE_URL = 'https://arjppadarehcmvbppxcc.supabase.co';
@@ -115,10 +115,11 @@
     async function login() {
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
-      const { error } = await sb.auth.signInWithPassword({ email, password });
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) {
         alert(error.message);
       } else {
+        localStorage.setItem('user_email', email);
         redirectToHome();
       }
     }
@@ -133,33 +134,39 @@
         return;
       }
 
-      const { error } = await sb.auth.signUp({ email, password });
+      const { data, error } = await sb.auth.signUp({ email, password });
       if (error) {
         alert(error.message);
       } else {
+        localStorage.setItem('user_email', email);
         redirectToHome();
       }
     }
 
     async function logout() {
       await sb.auth.signOut();
+      localStorage.removeItem('user_email');
       location.reload();
-    }
-
-    async function checkAuth() {
-      const { data: { session } } = await sb.auth.getSession();
-      if (session) {
-        document.querySelector('.auth-wrapper').style.display = 'none';
-        document.getElementById('profile-section').style.display = 'block';
-        document.getElementById('user-email').textContent = session.user.email;
-      }
     }
 
     function redirectToHome() {
       window.location.href = 'https://www.fictiondiary.com/';
     }
 
-    checkAuth();
+    function displayPersistentProfile() {
+      const email = localStorage.getItem('user_email');
+      if (email) {
+        const profileSection = document.getElementById('profile-section');
+        if (profileSection) {
+          profileSection.style.display = 'block';
+          document.getElementById('user-email').textContent = email;
+        }
+        const authWrapper = document.getElementById('auth-wrapper');
+        if (authWrapper) authWrapper.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', displayPersistentProfile);
   </script>
 </body>
 </html>
