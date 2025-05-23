@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FictionDiary Auth</title>
+  <style>
+    body {
+      background-color: #fff;
+      color: #000;
+      font-family: Arial, sans-serif;
+    }
+    .auth-wrapper {
+      width: 100%;
+      max-width: 400px;
+      margin: 50px auto;
+      background: #f0f0f0;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .tab-buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+    .tab-buttons button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+      background: #ddd;
+      font-weight: bold;
+    }
+    .tab-buttons button.active {
+      background: #fff;
+      border-bottom: 2px solid #000;
+    }
+    .auth-form {
+      display: none;
+      padding: 20px;
+    }
+    .auth-form.active {
+      display: block;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      background: #fff;
+      color: #000;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button.submit {
+      width: 100%;
+      padding: 10px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .header-profile {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: #000;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-profile" id="profile-section">
+    <span id="user-email"></span>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <div class="auth-wrapper" id="auth-wrapper">
+    <div class="tab-buttons">
+      <button id="login-tab" class="active" onclick="switchTab('login')">Login</button>
+      <button id="signup-tab" onclick="switchTab('signup')">Signup</button>
+    </div>
+
+    <div id="login" class="auth-form active">
+      <h2>Login</h2>
+      <input type="email" id="login-email" placeholder="Email" required />
+      <input type="password" id="login-password" placeholder="Password" required />
+      <button class="submit" onclick="login()">Login</button>
+    </div>
+
+    <div id="signup" class="auth-form">
+      <h2>Signup</h2>
+      <input type="email" id="signup-email" placeholder="Email" required />
+      <input type="password" id="signup-password" placeholder="Password" required />
+      <input type="password" id="signup-confirm" placeholder="Confirm Password" required />
+      <button class="submit" onclick="signup()">Signup</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const SUPABASE_URL = 'https://arjppadarehcmvbppxcc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyanBwYWRhcmVoY212YnBweGNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4NTExMjEsImV4cCI6MjA2MzQyNzEyMX0.c-12tW84Eee_pPMZCszbBKgft0kLEAhLGKSxRlilu0U';
+
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-form').forEach(el => el.classList.remove('active'));
+      document.querySelector(`#${tab}`).classList.add('active');
+
+      document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`${tab}-tab`).classList.add('active');
+    }
+
+    async function login() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        alert(error.message);
+      } else {
+        localStorage.setItem('user_email', email);
+        redirectToHome();
+      }
+    }
+
+    async function signup() {
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('signup-confirm').value;
+
+      if (password !== confirmPassword) {
+        alert('Passwords do not match.');
+        return;
+      }
+
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if (error) {
+        alert(error.message);
+      } else {
+        localStorage.setItem('user_email', email);
+        redirectToHome();
+      }
+    }
+
+    async function logout() {
+      await sb.auth.signOut();
+      localStorage.removeItem('user_email');
+      location.reload();
+    }
+
+    function redirectToHome() {
+      window.location.href = 'https://www.fictiondiary.com/';
+    }
+
+    function displayPersistentProfile() {
+      const email = localStorage.getItem('user_email');
+      if (email) {
+        const profileSection = document.getElementById('profile-section');
+        if (profileSection) {
+          profileSection.style.display = 'block';
+          document.getElementById('user-email').textContent = email;
+        }
+        const authWrapper = document.getElementById('auth-wrapper');
+        if (authWrapper) authWrapper.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', displayPersistentProfile);
+  </script>
+</body>
+</html>
